@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>TONNEL</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#050d10;--bg2:#0a1a1fee;--line:#163840;--cy:#2fb5ad;--cy2:#7ff0e0;--tx:#e8f6f4;--mu:#7f9fa6;--ok:#35e0a1;--er:#ff6b7a}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:Tahoma,"Segoe UI",system-ui,sans-serif;overflow:hidden}
+body{background:radial-gradient(120% 60% at 50% -10%,#0d3a40 0%,transparent 60%),var(--bg)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.5}
+#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.view{flex:1;overflow-y:auto;padding:16px 18px 24px;display:none}
+.view.on{display:block}
+h1{font-size:21px;margin-bottom:6px}
+p.s{color:var(--mu);font-size:13px;line-height:1.9}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
+.btn{width:100%;border:0;border-radius:16px;padding:15px;font:700 16px Tahoma,sans-serif;color:#03201f;background:linear-gradient(135deg,var(--cy2),var(--cy));box-shadow:0 8px 28px #2fb5ad44;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:#0a1a1f;color:var(--cy2);border:1px solid var(--cy);box-shadow:none}
+.btn:disabled{background:#10282c;color:#5f8288;border-color:#10282c;box-shadow:none;cursor:default}
+input{width:100%;background:#061418;border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--tx);font:15px Tahoma,sans-serif;margin-top:8px;outline:none}
+input:focus{border-color:var(--cy)}
+label{font-size:13px;color:var(--mu);display:block;margin-top:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border:0}
+.ltr{direction:ltr;unicode-bidi:embed}
+.msg{min-height:20px;margin-top:12px;font-size:13px;text-align:center}
+.msg.e{color:var(--er)}.msg.o{color:var(--ok)}
+#gate{text-align:center;padding-top:5vh}
+#gate img{display:block;max-width:100%;max-height:48vh;margin:0 auto 14px;border-radius:14px;box-shadow:0 0 40px #2fb5ad44}
+.step{display:flex;align-items:center;gap:12px;margin-top:12px;text-align:start}
+.step b{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--cy);color:var(--cy2);display:grid;place-items:center;font-size:14px}
+.top{display:flex;justify-content:flex-end}
+#lb{background:#0a1a1f;border:1px solid var(--line);color:var(--cy2);border-radius:20px;padding:8px 14px;font:13px Tahoma,sans-serif;cursor:pointer}
+.bal{text-align:center;margin-top:8px}
+.bal small{color:var(--mu);font-size:13px}
+.bal div{font-size:38px;font-weight:700;color:var(--cy2)}
+.ringwrap{position:relative;width:250px;height:250px;margin:12px auto 74px}
+.ringwrap svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#mlogo{position:absolute;inset:22px;width:206px;height:206px;border-radius:50%;object-fit:cover;object-position:50% 14%;opacity:.7;transition:.4s}
+.ringwrap.on #mlogo{opacity:1;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 50px #2fb5adcc}}
+.ringwrap .in{position:absolute;left:0;right:0;bottom:-64px;text-align:center}
+.cnt{font-size:26px;font-weight:700}
+.cnt small{display:block;font-size:12px;color:var(--cy2);font-weight:400}
+@media(prefers-reduced-motion:reduce){.ringwrap.on #mlogo{animation:none}}
+nav{direction:ltr;display:flex;align-items:flex-end;background:#040a0cf2;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav button{flex:1;background:none;border:0;color:var(--mu);font:11px Tahoma,sans-serif;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:4px}
+nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--cy2)}
+nav button.mid svg{width:30px;height:30px;padding:10px;box-sizing:content-box;border-radius:50%;background:linear-gradient(135deg,#0f3a40,#0a1a1f);border:1px solid var(--cy);margin-top:-22px;box-shadow:0 0 18px #2fb5ad66}
+#nav{display:none}
+.st{font-size:12px;padding:3px 10px;border-radius:20px}
+.st.pending{background:#3a2f0f;color:#ffcb5c}.st.paid,.st.done{background:#0e3326;color:var(--ok)}
+#ov{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:9}
+#ov.on{display:flex}
+#ov .box{background:#0a1a1f;border:1px solid var(--cy);border-radius:20px;padding:18px;width:80%;max-width:300px}
+#ov .btn{margin-top:10px}
+.pr{font-size:34px;font-weight:700;color:var(--cy2);text-align:center}
+#cg{font-size:14px;text-align:center;margin-top:4px}
+.md{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:9}.md.on{display:flex}.md .box{background:#0a1a1f;border:1px solid #2fb5ad;border-radius:20px;padding:18px;width:88%;max-width:340px;max-height:80vh;overflow:auto;font-size:13px;line-height:1.9}
+.top{gap:8px}.tb{background:#0a1a1f;border:1px solid var(--line);color:var(--cy2);border-radius:20px;padding:8px 14px;font:13px Tahoma,sans-serif;cursor:pointer}.tb img{width:20px;height:20px;border-radius:50%;vertical-align:middle}
+#tc-widget-root{position:relative!important;z-index:2147483000!important}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js" onerror="var s=document.createElement('script');s.src='https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js';document.head.appendChild(s)"></script>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="ov"><div class="box"><b data-i="lang"></b>
+<button class="btn ghost" data-l="en">English</button><button class="btn ghost" data-l="fa">فارسی</button><button class="btn ghost" data-l="ru">Русский</button><button class="btn ghost" data-l="ar">العربية</button></div></div>
+<div id="app">
+
+<section class="view on" id="load"><p class="s" style="text-align:center;margin-top:40vh" data-i="gload"></p></section>
+
+<section class="view" id="gate">
+  <img src="logo.jpg" alt="TONNEL">
+  <h1 data-i="gt"></h1><p class="s" data-i="gs"></p>
+  <div class="card"><div class="step"><b>1</b><span data-i="g1"></span></div><div class="step"><b>2</b><span data-i="g2"></span></div></div>
+  <button class="btn" style="margin-top:18px" onclick="joinCh()" data-i="join"></button>
+  <button class="btn ghost" style="margin-top:10px" onclick="load()" data-i="joined"></button>
+  <div class="msg" id="gmsg"></div>
+</section>
+
+<section class="view" id="v-miner">
+  <div class="top"><button id="lb" onclick="$('ov').classList.add('on')">🌐 <span id="lname"></span></button></div>
+  <div class="bal"><small data-i="bal"></small><div><span id="b1">0</span> <span style="font-size:16px">TONNEL</span></div></div>
+  <div class="ringwrap" id="rw">
+    <svg viewBox="0 0 250 250" width="250" height="250"><circle cx="125" cy="125" r="116" fill="none" stroke="#10282c" stroke-width="8"/><circle id="arc" cx="125" cy="125" r="116" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" stroke-dasharray="729" stroke-dashoffset="729"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ff0e0"/><stop offset="1" stop-color="#2fb5ad"/></linearGradient></defs></svg>
+    <img id="mlogo" src="miner.png" alt="" onerror="this.onerror=null;this.src='logo.jpg'">
+    <div class="in"><div class="cnt" id="cnt"></div></div>
+  </div>
+  <div class="card">
+    <div class="row"><span data-i="per"></span><b id="per">3</b></div>
+    <div class="row"><span data-i="mined"></span><b id="mined" class="ltr">0</b></div>
+    <div class="row"><span data-i="minc"></span><b>1</b></div>
+  </div>
+  <button class="btn" id="startBtn" style="margin-top:14px" onclick="act('start')" data-i="start"></button>
+  <button class="btn ghost" id="claimBtn" style="margin-top:10px;display:none" onclick="act('claim')" disabled></button>
+  <div class="msg" id="mmsg"></div>
+</section>
+
+<section class="view" id="v-tasks">
+  <h1 data-i="tt"></h1><p class="s" data-i="ts"></p>
+  <div class="card" style="text-align:center">
+    <div style="font-size:17px;font-weight:700" class="ltr">@TONNELCRYPT0</div>
+    <div class="row" style="margin-top:8px"><span>+0.1 TONNEL</span><b id="tnext" style="font-size:12px;color:var(--cy2)" class="ltr"></b></div>
+    <button class="btn ghost" style="margin-top:10px" onclick="joinCh()" data-i="tn"></button>
+    <button class="btn" id="taskBtn" style="margin-top:10px" onclick="act('task')" data-i="tc"></button>
+    <div class="msg" id="tmsg"></div>
+  </div>
+</section>
+
+<section class="view" id="v-withdraw">
+  <h1 data-i="wd"></h1><p class="s" data-i="wts"></p>
+  <div class="card">
+    <label style="margin-top:0"><span data-i="amt"></span> (≥ <span id="minw2"></span>)</label>
+    <input id="wa" type="number" inputmode="numeric">
+    <label data-i="addr"></label>
+    <input id="wd" class="ltr" placeholder="UQ… / EQ…" autocomplete="off" spellcheck="false">
+    <button class="btn" style="margin-top:18px" onclick="withdraw()" data-i="sub"></button>
+    <div class="msg" id="wmsg"></div>
+  </div>
+  <h1 style="margin-top:22px;font-size:17px" data-i="hist"></h1>
+  <div class="card" id="hl"></div>
+</section>
+
+<section class="view" id="v-chart">
+  <h1 data-i="ct"></h1>
+  <div class="card">
+    <div class="pr ltr" id="pr">—</div><div id="cg" class="ltr"></div>
+    <svg id="svg" viewBox="0 0 320 150" style="width:100%;margin-top:12px"></svg>
+    <div class="msg" id="cmsg"></div>
+  </div>
+</section>
+
+<section class="view" id="v-wallet">
+  <h1 data-i="wal"></h1>
+  <div class="card" style="text-align:center"><small style="color:var(--mu)" data-i="bal"></small>
+    <div style="font-size:38px;font-weight:700;color:var(--cy2);margin-top:6px" id="b2">0</div><div style="color:var(--mu);font-size:13px">TONNEL</div></div>
+  <div class="card"><div class="row"><span data-i="minw"></span><b id="minw">50</b></div><div class="row"><span data-i="uid"></span><b class="ltr" id="uid">-</b></div></div>
+</section>
+
+<div class="md" id="mr"><div class="box"><b data-i="rls"></b><div id="rbd" style="white-space:pre-line;margin-top:8px"></div></div></div>
+<div class="md" id="ma"><div class="box" style="text-align:center"><div id="av"></div><div id="an" style="font-weight:700;margin-top:8px"></div><div class="m" id="au"></div><div class="row" style="margin-top:10px"><span data-i="idl"></span><b class="ltr" id="ai"></b></div></div></div>
+<nav id="nav">
+  <button data-t="tasks"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg><span data-i="tasks"></span></button>
+  <button data-t="withdraw"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg><span data-i="wd"></span></button>
+  <button data-t="miner" class="mid on"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><span data-i="miner"></span></button>
+  <button data-t="chart"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 8-9M3 21h18"/></svg><span data-i="chart"></span></button>
+  <button data-t="wallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M16 13h2M3 10h18"/></svg><span data-i="wal"></span></button>
+</nav>
+</div>
+
+<script>
+const API="https://mybot-api.mehditera385.workers.dev",CH="https://t.me/TONNELCRYPT0",TOKEN="EQDNDv54v_TEU5t26rFykylsdPQsv5nsSZaH_v7JSJPtMitv";
+const L={
+en:{gt:"Welcome to TONNEL",gs:"Join our main channel to start mining.",g1:"Tap the button and join the channel",g2:"Come back and tap “I joined”",join:"Join channel",joined:"I joined",gnm:"You haven’t joined yet. Join, then try again.",gload:"Loading…",gerr:"Connection error. Please reopen.",tg:"Open this app inside Telegram",tasks:"Tasks",wd:"Withdraw",miner:"Miner",chart:"Chart",wal:"Wallet",bal:"Your balance",start:"Start mining",claim:"Claim",ready:"Ready",left:"until finished",done:"Finished",per:"Reward per 24h",mined:"Mined this session",minc:"Minimum claim",cok:"Added to your wallet",tt:"Tasks",ts:"Join our channel and claim a reward. The task refreshes every 5 hours.",tn:"Join the channel",tc:"Claim reward",tnext:"Next reward in",tok:"Reward added to your wallet",minw:"Minimum withdrawal",uid:"Your ID",wts:"Tokens are sent to your TON wallet address. Requests are reviewed and paid manually.",amt:"Amount",addr:"TON wallet address",sub:"Request withdrawal",wok:"Request submitted. It will be paid after review.",hist:"Withdrawal history",none:"No withdrawals yet",pend:"Pending",paid:"Paid",ct:"TONNEL price",chg:"24h",cnoaddr:"Price source is not set yet",cerr:"Chart unavailable. Try again later.",lang:"Language",e_claim:"Minimum claim is 1 TONNEL",e_nm:"Join the channel first",e_early:"You can start again after 24 hours",e_wait:"Not available yet",e_bal:"Insufficient balance",e_inv:"Invalid amount or address",e_auth:"Open the app from Telegram"},
+fa:{gt:"به TONNEL خوش آمدید",gs:"برای شروع ماین، عضو کانال اصلی شوید.",g1:"روی دکمه بزنید و عضو کانال شوید",g2:"برگردید و «عضو شدم» را بزنید",join:"عضویت در کانال",joined:"عضو شدم",gnm:"هنوز عضو نشده‌اید. عضو شوید و دوباره امتحان کنید.",gload:"در حال بارگذاری…",gerr:"خطا در اتصال. دوباره باز کنید.",tg:"این برنامه را داخل تلگرام باز کنید",tasks:"مأموریت",wd:"برداشت",miner:"ماینر",chart:"نمودار",wal:"کیف پول",bal:"موجودی شما",start:"شروع ماین",claim:"جمع‌آوری",ready:"آماده",left:"تا پایان",done:"تمام شد",per:"پاداش هر ۲۴ ساعت",mined:"ماین‌شده در این دوره",minc:"حداقل جمع‌آوری",cok:"به کیف پول شما اضافه شد",tt:"مأموریت‌ها",ts:"عضو کانال ما شوید و جایزه بگیرید. مأموریت هر ۵ ساعت تازه می‌شود.",tn:"عضویت در کانال",tc:"دریافت جایزه",tnext:"جایزه بعدی تا",tok:"جایزه به کیف پول اضافه شد",minw:"حداقل برداشت",uid:"شناسه شما",wts:"توکن‌ها به آدرس کیف پول TON شما ارسال می‌شوند. درخواست‌ها بررسی و دستی پرداخت می‌شوند.",amt:"مقدار",addr:"آدرس کیف پول TON",sub:"ثبت درخواست برداشت",wok:"درخواست ثبت شد و پس از بررسی پرداخت می‌شود.",hist:"سوابق برداشت",none:"هنوز برداشتی ثبت نشده",pend:"در انتظار",paid:"پرداخت شد",ct:"قیمت TONNEL",chg:"۲۴ ساعت",cnoaddr:"منبع قیمت هنوز تنظیم نشده",cerr:"نمودار در دسترس نیست. بعداً امتحان کنید.",lang:"زبان",e_claim:"حداقل جمع‌آوری ۱ توکن است",e_nm:"ابتدا عضو کانال شوید",e_early:"بعد از ۲۴ ساعت می‌توانید دوباره شروع کنید",e_wait:"هنوز در دسترس نیست",e_bal:"موجودی کافی نیست",e_inv:"مقدار یا آدرس نامعتبر است",e_auth:"برنامه را از تلگرام باز کنید"},
+ru:{gt:"Добро пожаловать в TONNEL",gs:"Подпишитесь на наш главный канал, чтобы начать майнинг.",g1:"Нажмите кнопку и подпишитесь на канал",g2:"Вернитесь и нажмите «Я подписался»",join:"Подписаться на канал",joined:"Я подписался",gnm:"Вы ещё не подписаны. Подпишитесь и попробуйте снова.",gload:"Загрузка…",gerr:"Ошибка соединения. Откройте заново.",tg:"Откройте приложение в Telegram",tasks:"Задания",wd:"Вывод",miner:"Майнер",chart:"График",wal:"Кошелёк",bal:"Ваш баланс",start:"Начать майнинг",claim:"Забрать",ready:"Готово",left:"до конца",done:"Завершено",per:"Награда за 24 ч",mined:"Добыто за сессию",minc:"Минимум для сбора",cok:"Добавлено в кошелёк",tt:"Задания",ts:"Подпишитесь на наш канал и получите награду. Задание обновляется каждые 5 часов.",tn:"Подписаться на канал",tc:"Получить награду",tnext:"Следующая награда через",tok:"Награда добавлена в кошелёк",minw:"Минимум для вывода",uid:"Ваш ID",wts:"Токены отправляются на ваш TON-кошелёк. Заявки проверяются и оплачиваются вручную.",amt:"Сумма",addr:"Адрес TON-кошелька",sub:"Запросить вывод",wok:"Заявка отправлена. Выплата после проверки.",hist:"История выводов",none:"Выводов пока нет",pend:"В ожидании",paid:"Выплачено",ct:"Цена TONNEL",chg:"24 ч",cnoaddr:"Источник цены ещё не настроен",cerr:"График недоступен. Попробуйте позже.",lang:"Язык",e_claim:"Минимум для сбора — 1 TONNEL",e_nm:"Сначала подпишитесь на канал",e_early:"Начать снова можно через 24 часа",e_wait:"Пока недоступно",e_bal:"Недостаточно средств",e_inv:"Неверная сумма или адрес",e_auth:"Откройте приложение из Telegram"},
+ar:{gt:"مرحبًا بك في TONNEL",gs:"انضم إلى قناتنا الرئيسية لبدء التعدين.",g1:"اضغط على الزر وانضم إلى القناة",g2:"عد واضغط «انضممت»",join:"الانضمام إلى القناة",joined:"انضممت",gnm:"لم تنضم بعد. انضم ثم حاول مجددًا.",gload:"جارٍ التحميل…",gerr:"خطأ في الاتصال. أعد فتح التطبيق.",tg:"افتح التطبيق داخل تيليجرام",tasks:"المهام",wd:"سحب",miner:"التعدين",chart:"الرسم",wal:"المحفظة",bal:"رصيدك",start:"ابدأ التعدين",claim:"تجميع",ready:"جاهز",left:"حتى الانتهاء",done:"انتهى",per:"المكافأة كل 24 ساعة",mined:"المُعدَّن في هذه الجلسة",minc:"الحد الأدنى للتجميع",cok:"تمت الإضافة إلى محفظتك",tt:"المهام",ts:"انضم إلى قناتنا واحصل على مكافأة. تتجدد المهمة كل 5 ساعات.",tn:"الانضمام إلى القناة",tc:"استلام المكافأة",tnext:"المكافأة التالية بعد",tok:"تمت إضافة المكافأة إلى محفظتك",minw:"الحد الأدنى للسحب",uid:"معرّفك",wts:"تُرسل الرموز إلى عنوان محفظة TON الخاصة بك. تتم مراجعة الطلبات ودفعها يدويًا.",amt:"المبلغ",addr:"عنوان محفظة TON",sub:"طلب سحب",wok:"تم إرسال الطلب وسيُدفع بعد المراجعة.",hist:"سجل السحب",none:"لا توجد عمليات سحب بعد",pend:"قيد الانتظار",paid:"تم الدفع",ct:"سعر TONNEL",chg:"24 ساعة",cnoaddr:"مصدر السعر لم يُضبط بعد",cerr:"الرسم غير متاح. حاول لاحقًا.",lang:"اللغة",e_claim:"الحد الأدنى للتجميع 1 TONNEL",e_nm:"انضم إلى القناة أولًا",e_early:"يمكنك البدء مجددًا بعد 24 ساعة",e_wait:"غير متاح بعد",e_bal:"الرصيد غير كافٍ",e_inv:"مبلغ أو عنوان غير صالح",e_auth:"افتح التطبيق من تيليجرام"}};
+const tg=window.Telegram&&Telegram.WebApp;
+if(tg){tg.ready();tg.expand();try{tg.setHeaderColor("#050d10");tg.setBackgroundColor("#050d10")}catch(e){}}
+const $=id=>document.getElementById(id);
+let S=null,off=0,cur="miner",POOL=null,lang="en";
+try{lang=localStorage.getItem("l")||"en"}catch(e){}
+const t=k=>(L[lang]&&L[lang][k])||L.en[k]||k;
+const f4=m=>(m/1e6).toLocaleString("en-US",{maximumFractionDigits:4});
+const hms=s=>{s=Math.max(0,Math.ceil(s));const p=n=>String(n).padStart(2,"0");return p(Math.floor(s/3600))+":"+p(Math.floor(s%3600/60))+":"+p(s%60)};
+const msg=(id,k,ok)=>{const e=$(id);e.className="msg "+(ok?"o":"e");e.textContent=k?t(k):""};
+
+(function(){const c=$("fx"),x=c.getContext("2d"),fs=16;let cols,dr;
+function rs(){c.width=innerWidth;c.height=innerHeight;cols=Math.ceil(c.width/fs);dr=Array.from({length:cols},()=>Math.random()*-60)}
+rs();addEventListener("resize",rs);
+if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+setInterval(()=>{x.globalCompositeOperation="destination-out";x.fillStyle="rgba(0,0,0,.12)";x.fillRect(0,0,c.width,c.height);
+x.globalCompositeOperation="source-over";x.font=fs+"px monospace";
+for(let i=0;i<cols;i++){const y=dr[i]*fs;if(y>0){x.fillStyle=Math.random()<.08?"#d6fffa":"#2fb5ad";x.fillText(Math.random()<.5?"0":"1",i*fs,y)}
+if(y>c.height&&Math.random()>.975)dr[i]=0;dr[i]++}},60)})();
+
+function setLang(l){lang=l;try{localStorage.setItem("l",l)}catch(e){}
+ document.documentElement.lang=l;document.documentElement.dir=(l==="fa"||l==="ar")?"rtl":"ltr";
+ document.querySelectorAll("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));
+ $("lname").textContent={en:"English",fa:"فارسی",ru:"Русский",ar:"العربية"}[l];
+ if(S)stat();tick();if(cur==="chart")loadChart()}
+document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{setLang(b.dataset.l);$("ov").classList.remove("on")});
+$("ov").onclick=e=>{if(e.target.id==="ov")$("ov").classList.remove("on")};
+
+function tab(x){cur=x;document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));$("v-"+x).classList.add("on");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===x));if(x==="chart")loadChart()}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.t));
+
+async function call(p,x){try{const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg?tg.initData:"",...x})});const d=await r.json();if(!r.ok&&!d.error)d.error="net";return d}catch(e){return{error:"net"}}}
+const joinCh=()=>tg?tg.openTelegramLink(CH):window.open(CH);
+
+async function load(){
+ const c=await call("/api/check");
+ if(c.error==="auth"){$("load").innerHTML='<p class="s" style="text-align:center;margin-top:40vh">'+t("tg")+'</p>';return}
+ if(c.error){$("load").innerHTML='<p class="s" style="text-align:center;margin-top:40vh">'+t("gerr")+'</p>';return}
+ if(!c.member){document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));$("gate").classList.add("on");$("nav").style.display="none";if(S)msg("gmsg","gnm");return}
+ const d=await call("/api/state");
+ if(d.error){$("load").innerHTML='<p class="s" style="text-align:center;margin-top:40vh">'+t("gerr")+'</p>';return}
+ apply(d);$("nav").style.display="flex";tab("miner")}
+function apply(d){S=d;off=d.now-Date.now()/1000;stat();tick()}
+function stat(){
+ $("b1").textContent=$("b2").textContent=f4(S.balance);$("per").textContent=S.total/1e6;
+ $("minw").textContent=$("minw2").textContent=S.min_withdraw;$("wa").placeholder=S.min_withdraw;
+ if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)$("uid").textContent=tg.initDataUnsafe.user.id;
+ const loc=lang==="fa"?"fa-IR":lang==="ar"?"ar":lang==="ru"?"ru":"en-US",h=S.history||[];
+ $("hl").innerHTML=h.length?h.map(x=>`<div class="row"><div><b>${x.amount}</b> TONNEL<div style="color:var(--mu);font-size:12px;margin-top:4px">${new Date(x.created_at*1000).toLocaleDateString(loc)}</div></div><span class="st ${x.status}">${x.status==="pending"?t("pend"):t("paid")}</span></div>`).join(""):`<div style="text-align:center;color:var(--mu)">${t("none")}</div>`}
+function tick(){
+ if(!S)return;
+ const now=Date.now()/1000+off,st=S.miner_start,D=S.day,el=st?Math.max(0,now-st):0,p=st?Math.min(1,el/D):0;
+ const acc=st?Math.floor(Math.min(el,D)*S.total/D):0,av=acc-S.claimed,ended=st&&el>=D;
+ $("arc").style.strokeDashoffset=729*(1-p);$("rw").classList.toggle("on",!!st&&!ended);
+ $("cnt").innerHTML=!st?t("ready"):ended?t("done"):`<span class="ltr">${hms(D-el)}</span><small>${t("left")}</small>`;
+ $("mined").textContent=(acc/1e6).toFixed(4);
+ $("startBtn").style.display=(!st||ended)?"block":"none";$("claimBtn").style.display=st?"block":"none";
+ $("claimBtn").disabled=av<S.min_claim;$("claimBtn").textContent=t("claim")+" "+(Math.max(av,0)/1e6).toFixed(4);
+ const nx=S.task_last+S.task_every-now;$("taskBtn").disabled=nx>0||!S.join_ok;$("tnext").textContent=nx>0?t("tnext")+" "+hms(nx):"";
+}
+setInterval(tick,1000);
+
+const EM={not_ready:"e_claim",not_member:"e_nm",early:"e_early",wait:"e_wait",balance:"e_bal",invalid:"e_inv",auth:"e_auth"};
+async function act(a){
+ const id=a==="task"?"tmsg":"mmsg";msg(id,"");
+ const d=await call("/api/"+a);
+ if(d.error){if(d.error==="not_member"){load();return}msg(id,EM[d.error]||"gerr");return}
+ apply(d);if(a==="claim")msg(id,"cok",1);if(a==="task")msg(id,"tok",1)}
+async function withdraw(){
+ msg("wmsg","");const amount=parseInt($("wa").value,10),address=$("wd").value.trim();
+ if(!amount||amount<S.min_withdraw||!/^[A-Za-z0-9_-]{48}$/.test(address)){msg("wmsg","e_inv");return}
+ if(amount*1e6>S.balance){msg("wmsg","e_bal");return}
+ const d=await call("/api/withdraw",{amount,address});
+ if(d.error){msg("wmsg",EM[d.error]||"gerr");return}
+ apply(d);$("wa").value="";$("wd").value="";msg("wmsg","wok",1)}
+
+async function loadChart(){
+ if(!TOKEN){$("cmsg").className="msg";$("cmsg").textContent=t("cnoaddr");return}
+ try{
+  const g="https://api.geckoterminal.com/api/v2/networks/ton/";
+  const k=await(await fetch(g+"tokens/"+TOKEN)).json(),price=Number(k.data.attributes.price_usd);
+  if(!POOL){const p=await(await fetch(g+"tokens/"+TOKEN+"/pools?page=1")).json();POOL=p.data[0].attributes.address}
+  const o=await(await fetch(g+"pools/"+POOL+"/ohlcv/minute?aggregate=15&limit=96&currency=usd")).json();
+  const c=o.data.attributes.ohlcv_list.map(x=>Number(x[4])).reverse();
+  const ch=(price-c[0])/c[0]*100,up=ch>=0,col=up?"#35e0a1":"#ff6b7a",mn=Math.min(...c),mx=Math.max(...c);
+  const pts=c.map((v,i)=>[10+i/(c.length-1)*300,10+(1-(v-mn)/((mx-mn)||1))*120]);
+  const ln=pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  $("svg").innerHTML=`<defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs><polygon points="10,140 ${ln} 310,140" fill="url(#ar)"/><polyline points="${ln}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  $("pr").textContent="$"+price.toFixed(price<1?4:2);
+  $("cg").style.color=col;$("cg").textContent=(up?"+":"")+ch.toFixed(2)+"%  ·  "+t("chg");$("cmsg").textContent="";
+ }catch(e){$("cmsg").className="msg e";$("cmsg").textContent=t("cerr")}}
+setInterval(()=>{if(cur==="chart")loadChart()},60000);
+
+setLang(lang);load();
+</script>
+<script>
+Object.assign(L.en,{"rls": "Rules", "rb": "1. One account per person. Fake or duplicate accounts are removed.\n2. Mining: 1.5 TONNEL every 24h. Claim anytime once you have 1+ token.\n3. To claim the channel reward, open the channel first.\n4. Withdrawals need a verified account and take 1 to 72 working hours.\n5. Please keep your tokens after payout. Selling or swapping hurts the market and your own gains.\n6. Bots, cheating or abuse lead to a permanent ban.", "nt": "Dear user, your withdrawal takes 1 to 72 working hours. Please be patient. After payout, keep your tokens and do not exchange or sell them. You don’t need to: selling causes small damage to the token market. We are future-oriented and aim for growth. The more the token grows, the more every holder can gain.", "ra": "I have read all of this", "fw": "Confirm withdrawal", "vl": "Verify your account to unlock withdrawals.", "wl": "Withdrawals left", "ac": "Account", "idl": "Telegram ID", "jf": "Open the channel first, then claim", "e_lock": "Account not verified or no withdrawals left", "ts": "Join our channel and claim a reward. The task refreshes every 12 hours."});Object.assign(L.fa,{"rls": "قوانین", "rb": "۱. هر نفر فقط یک حساب. حساب‌های تکراری یا فیک حذف می‌شوند.\n۲. ماین: هر ۲۴ ساعت ۱.۵ توکن. بعد از داشتن حداقل ۱ توکن هر زمان می‌توانید جمع‌آوری کنید.\n۳. برای دریافت جایزه کانال، ابتدا باید وارد کانال شوید.\n۴. برداشت فقط با حساب وریفای‌شده است و ۱ تا ۷۲ ساعت کاری طول می‌کشد.\n۵. لطفاً بعد از واریز توکن‌ها را نگه دارید. فروش یا تبدیل به بازار و سود خودتان آسیب می‌زند.\n۶. ربات، تقلب و سوءاستفاده یعنی مسدود شدن دائمی.", "nt": "کاربر گرامی، برداشت شما ۱ تا ۷۲ ساعت کاری طول می‌کشد. لطفاً صبور باشید. بعد از واریز، توکن‌های خود را نزد خود نگه دارید و آن‌ها را چنج یا نفروشید. نیازی به این کار نیست و فروش شما به بازار توکن آسیب کوچکی می‌زند. ما آینده‌نگر هستیم و به دنبال رشد بیشتریم. هرچه توکن بیشتر رشد کند، همه نگه‌دارندگان می‌توانند سود بیشتری ببرند.", "ra": "همه این‌ها را خواندم", "fw": "تأیید برداشت", "vl": "برای فعال شدن برداشت، حساب خود را وریفای کنید.", "wl": "برداشت‌های باقی‌مانده", "ac": "حساب", "idl": "آیدی تلگرام", "jf": "اول وارد کانال شوید، بعد جایزه را بگیرید", "e_lock": "حساب وریفای نشده یا برداشت باقی نمانده", "ts": "عضو کانال ما شوید و جایزه بگیرید. مأموریت هر ۱۲ ساعت تازه می‌شود."});Object.assign(L.ru,{"rls": "Правила", "rb": "1. Один аккаунт на человека. Фейки и дубликаты удаляются.\n2. Майнинг: 1,5 TONNEL каждые 24 ч. Забирать можно в любой момент, когда накоплен минимум 1 токен.\n3. Чтобы забрать награду за канал, сначала откройте канал.\n4. Вывод только для верифицированных аккаунтов, от 1 до 72 рабочих часов.\n5. После выплаты храните токены. Продажа или обмен вредит рынку и вашей прибыли.\n6. Боты, обман и злоупотребления ведут к блокировке навсегда.", "nt": "Уважаемый пользователь, вывод занимает от 1 до 72 рабочих часов. Пожалуйста, наберитесь терпения. После выплаты храните токены у себя, не обменивайте и не продавайте их. В этом нет необходимости, а продажа наносит небольшой урон рынку токена. Мы смотрим в будущее и стремимся к росту. Чем больше растёт токен, тем больше могут заработать все его держатели.", "ra": "Я всё прочитал", "fw": "Подтвердить вывод", "vl": "Пройдите верификацию аккаунта, чтобы разблокировать вывод.", "wl": "Осталось выводов", "ac": "Аккаунт", "idl": "Telegram ID", "jf": "Сначала откройте канал, затем заберите награду", "e_lock": "Аккаунт не верифицирован или выводов не осталось", "ts": "Подпишитесь на наш канал и получите награду. Задание обновляется каждые 12 часов."});Object.assign(L.ar,{"rls": "القواعد", "rb": "1. حساب واحد لكل شخص. تُحذف الحسابات المزيفة أو المكررة.\n2. التعدين: 1.5 TONNEL كل 24 ساعة. يمكنك التجميع في أي وقت بعد امتلاك 1 على الأقل.\n3. لاستلام مكافأة القناة، افتح القناة أولاً.\n4. السحب للحسابات الموثقة فقط ويستغرق من 1 إلى 72 ساعة عمل.\n5. يرجى الاحتفاظ برموزك بعد الدفع. البيع أو التبديل يضر بالسوق وبأرباحك.\n6. البوتات والغش وإساءة الاستخدام تؤدي إلى حظر دائم.", "nt": "عزيزي المستخدم، يستغرق سحبك من 1 إلى 72 ساعة عمل. يرجى التحلي بالصبر. بعد الإيداع احتفظ برموزك ولا تبدلها ولا تبعها. لا حاجة لذلك، فالبيع يسبب ضررًا بسيطًا لسوق الرمز. نحن ننظر إلى المستقبل ونسعى للنمو. كلما نما الرمز أكثر، زادت فرص الربح لجميع حامليه.", "ra": "قرأت كل ما سبق", "fw": "تأكيد السحب", "vl": "وثّق حسابك لفتح السحب.", "wl": "عمليات السحب المتبقية", "ac": "الحساب", "idl": "معرّف تيليجرام", "jf": "افتح القناة أولاً ثم استلم المكافأة", "e_lock": "الحساب غير موثق أو لا توجد عمليات سحب متبقية", "ts": "انضم إلى قناتنا واحصل على مكافأة. تتجدد المهمة كل 12 ساعة."});
+EM.locked="e_lock";
+let PX=0;
+async function px(){if(!TOKEN)return;try{const d=await(await fetch("https://api.geckoterminal.com/api/v2/networks/ton/tokens/"+TOKEN)).json();PX=Number(d.data.attributes.price_usd)||0;usd()}catch(e){}}
+function usd(){if(!S||!PX)return;$("usd1").textContent=$("usd2").textContent="≈ $"+(S.balance/1e6*PX).toFixed(2)}
+document.querySelector("#v-miner .bal").insertAdjacentHTML("beforeend",'<div id="usd1" class="m" style="font-size:13px"></div>');
+$("b2").parentNode.insertAdjacentHTML("beforeend",'<div id="usd2" class="m" style="font-size:13px;margin-top:4px"></div>');
+document.querySelector("#v-miner .top").insertAdjacentHTML("afterbegin",'<button class="tb" id="ab"></button><button class="tb" id="rb" data-i="rls"></button>');
+$("rb").onclick=()=>$("mr").classList.add("on");$("ab").onclick=()=>$("ma").classList.add("on");
+document.querySelectorAll(".md").forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove("on")});
+const wb=document.querySelector("#v-withdraw .card .btn");wb.id="wsub";wb.dataset.i="fw";wb.disabled=true;
+wb.insertAdjacentHTML("beforebegin",'<div class="m" id="wls" style="margin-top:14px;font-size:13px"></div><div id="ntx" class="m" style="font-size:12px;line-height:1.9;margin-top:10px"></div><label style="display:flex;gap:8px;align-items:center;color:var(--tx);margin-top:12px"><input type="checkbox" id="rc" style="width:auto;margin:0"><span data-i="ra"></span></label>');
+function wtxt(){$("rbd").textContent=t("rb");$("ntx").textContent=t("nt");if(!S)return;$("wls").textContent=S.verified?t("wl")+": "+S.wleft:t("vl");$("wsub").disabled=!($("rc").checked&&S.verified&&S.wleft>0)}
+$("rc").onchange=wtxt;
+const w0=withdraw;withdraw=function(){if(!S.verified||S.wleft<1){msg("wmsg","e_lock");return}if(!$("rc").checked)return;return w0()};
+const s0=stat;stat=function(){s0();wtxt();usd();const u=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)||{};
+ $("an").textContent=((u.first_name||"")+" "+(u.last_name||"")).trim();$("au").textContent=u.username?"@"+u.username:"";$("ai").textContent=u.id||"-";
+ $("av").innerHTML=u.photo_url?'<img src="'+u.photo_url+'" style="width:84px;height:84px;border-radius:50%">':'<div style="width:84px;height:84px;border-radius:50%;background:#10282c;margin:0 auto;display:grid;place-items:center;font-size:32px">'+((u.first_name||"?")[0])+'</div>';
+ $("ab").innerHTML=u.photo_url?'<img src="'+u.photo_url+'">':"&#9786;"};
+const sl0=setLang;setLang=function(l){sl0(l);wtxt()};
+document.querySelector("#v-tasks .btn.ghost").onclick=async()=>{const d=await call("/api/join");if(!d.error)apply(d);joinCh()};
+$("taskBtn").insertAdjacentHTML("afterend",'<div class="m" id="tj" style="font-size:12px;margin-top:8px" data-i="jf"></div>');
+setInterval(()=>{if(S)$("tj").style.display=S.join_ok?"none":"block"},1000);
+setLang(lang);px();setInterval(px,28800000);
+</script>
+<script>
+(function(){
+$("v-chart").querySelector(".card").innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div class="m" style="font-size:12px">TONNEL / USD</div><div class="pr ltr" id="pr" style="text-align:start">—</div></div><div id="cg" style="font-weight:700;font-size:14px" class="ltr"></div></div><div id="oh" class="m ltr" style="font-size:11px;margin:8px 0;min-height:14px"></div><div id="tfs"></div><svg id="svg" viewBox="0 0 340 262" style="width:100%;margin-top:8px;touch-action:pan-y"></svg><div class="msg" id="cmsg"></div>';
+const TF={"5m":["minute",5],"15m":["minute",15],"1h":["hour",1],"4h":["hour",4],"1D":["day",1]};
+let tf="15m",C=[],POOL2=null,CH24=null;
+$("tfs").innerHTML=Object.keys(TF).map(k=>'<button class="tb" data-tf="'+k+'" style="padding:5px 12px;margin-right:6px;font-size:12px">'+k+'</button>').join("");
+function marks(){document.querySelectorAll("[data-tf]").forEach(b=>{const on=b.dataset.tf===tf;b.style.color=on?"#7ff0e0":"#7f9fa6";b.style.borderColor=on?"#2fb5ad":"#163840"})}
+document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{tf=b.dataset.tf;C=[];marks();loadChart()});
+marks();
+const ema=(a,n)=>{const k=2/(n+1);let e=a[0];return a.map(v=>e=v*k+e*(1-k))};
+loadChart=async function(){
+ if(!TOKEN){$("cmsg").textContent=t("cnoaddr");return}
+ const key="tn_"+tf;let cached=null;try{cached=JSON.parse(localStorage.getItem(key)||"null")}catch(e){}
+ if(!C.length&&cached){C=cached.C;CH24=cached.ch;$("pr").textContent="$"+cached.p.toFixed(4);$("cg").textContent=cached.ch==null?"":(cached.ch>=0?"+":"")+cached.ch.toFixed(2)+"% · 24h";draw(null)}
+ const g="https://api.geckoterminal.com/api/v2/networks/ton/";
+ for(let k=0;k<3;k++){
+  try{
+   const p=await(await fetch(g+"tokens/"+TOKEN+"/pools?page=1",{headers:{Accept:"application/json;version=20230302"}})).json(),at=p.data[0].attributes;
+   POOL2=at.address;const price=Number(at.base_token_price_usd);CH24=at.price_change_percentage?Number(at.price_change_percentage.h24):null;
+   const u=TF[tf][0],ag=TF[tf][1];
+   const o=await(await fetch(g+"pools/"+POOL2+"/ohlcv/"+u+"?aggregate="+ag+"&limit=80&currency=usd&include_empty_intervals=true",{headers:{Accept:"application/json;version=20230302"}})).json();
+   const R=o.data.attributes.ohlcv_list.map(x=>x.slice(0,5).map(Number)).reverse(),sc=price/R[R.length-1][4];
+   C=R.map(x=>({t:x[0],o:x[1]*sc,h:x[2]*sc,l:x[3]*sc,c:x[4]*sc}));
+   const up=(CH24==null?price-C[0].c:CH24)>=0;
+   $("pr").textContent="$"+price.toFixed(4);
+   $("cg").style.color=up?"#35e0a1":"#ff6b7a";$("cg").textContent=CH24==null?"":(up?"+":"")+CH24.toFixed(2)+"% · 24h";
+   draw(null);$("cmsg").textContent="";
+   try{localStorage.setItem(key,JSON.stringify({C,ch:CH24,p:price}))}catch(e){}
+   return;
+  }catch(e){await new Promise(r=>setTimeout(r,2500))}
+ }
+ if(C.length){$("cmsg").textContent=""}else{$("cmsg").className="msg e";$("cmsg").textContent=t("cerr")}
+};
+function draw(hi){
+ const n=C.length,W=340,PH=190,x0=4,cw=(W-8)/n;
+ const mx=Math.max(...C.map(c=>c.h)),mn=Math.min(...C.map(c=>c.l)),Y=v=>6+(1-(v-mn)/((mx-mn)||1))*(PH-12);
+ let s="";
+ for(let j=0;j<4;j++){const y=6+j*(PH-12)/3,v=mx-(mx-mn)*j/3;s+='<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#163840" stroke-dasharray="2 4"/><text x="'+(W-2)+'" y="'+(y-2)+'" font-size="8" fill="#7f9fa6" text-anchor="end">'+v.toFixed(4)+'</text>'}
+ C.forEach((c,j)=>{const x=x0+j*cw,col=c.c>=c.o?"#35e0a1":"#ff6b7a",cx=x+cw/2;s+='<line x1="'+cx+'" x2="'+cx+'" y1="'+Y(c.h)+'" y2="'+Y(c.l)+'" stroke="'+col+'"/><rect x="'+(x+cw*.15)+'" y="'+Y(Math.max(c.o,c.c))+'" width="'+cw*.7+'" height="'+Math.max(1.5,Math.abs(Y(c.o)-Y(c.c)))+'" fill="'+col+'"/>'});
+ const last=C[n-1],ly=Y(last.c),lc=last.c>=last.o?"#35e0a1":"#ff6b7a";
+ s+='<line x1="0" x2="'+W+'" y1="'+ly+'" y2="'+ly+'" stroke="'+lc+'" stroke-dasharray="3 3"/><rect x="'+(W-52)+'" y="'+(ly-8)+'" width="52" height="16" rx="3" fill="'+lc+'"/><text x="'+(W-26)+'" y="'+(ly+4)+'" font-size="9" fill="#03201f" text-anchor="middle" font-weight="700">'+last.c.toFixed(4)+'</text>';
+ const cl=C.map(c=>c.c),e12=ema(cl,12),e26=ema(cl,26),m=e12.map((v,j)=>v-e26[j]),sg=ema(m,9),h=m.map((v,j)=>v-sg[j]);
+ const a=Math.max(...[...m,...sg,...h].map(Math.abs))||1,MY=v=>232-v/a*26;
+ s+='<line x1="0" x2="'+W+'" y1="200" y2="200" stroke="#163840"/><text x="4" y="209" font-size="8" fill="#7f9fa6">MACD 12 26 9</text>';
+ h.forEach((v,j)=>{s+='<rect x="'+(x0+j*cw+cw*.2)+'" y="'+Math.min(MY(v),232)+'" width="'+cw*.6+'" height="'+Math.abs(MY(v)-232)+'" fill="'+(v>=0?"#35e0a1":"#ff6b7a")+'" opacity=".6"/>'});
+ const pl=(r,c)=>'<polyline points="'+r.map((v,j)=>(x0+j*cw+cw/2).toFixed(1)+","+MY(v).toFixed(1)).join(" ")+'" fill="none" stroke="'+c+'" stroke-width="1.4"/>';
+ s+=pl(m,"#2fb5ad")+pl(sg,"#ffb454");
+ if(hi!=null){const cx=x0+hi*cw+cw/2;s+='<line x1="'+cx+'" x2="'+cx+'" y1="0" y2="262" stroke="#7ff0e0" stroke-opacity=".6"/>'}
+ $("svg").innerHTML=s;
+ const c=C[hi==null?n-1:hi],d=new Date(c.t*1000);
+ $("oh").textContent=d.toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+"  O "+c.o.toFixed(4)+"  H "+c.h.toFixed(4)+"  L "+c.l.toFixed(4)+"  C "+c.c.toFixed(4);
+}
+const mv=e=>{if(!C.length)return;const r=$("svg").getBoundingClientRect(),p=(e.clientX-r.left)/r.width*340;draw(Math.max(0,Math.min(C.length-1,Math.floor((p-4)/((340-8)/C.length)))))};
+$("svg").addEventListener("pointermove",mv);$("svg").addEventListener("pointerdown",mv);$("svg").addEventListener("pointerleave",()=>draw(null));
+})();
+</script>
+<script>
+(function(){
+Object.assign(L.en,{"vb": "Verify · 0.3 TON", "vt": "Account verification", "vp1": "This amount (0.3 TON) is deducted from you as the fee for in-app withdrawals and covers 5 withdrawals.", "vp2": "With this payment you can request 5 withdrawals.", "vp3": "It also keeps abusers and profit-seekers out of the app.", "cf": "Confirm", "connw": "Connect wallet", "wcon": "Wallet", "pyw": "Processing… this takes 2 to 5 minutes.", "pyd": "Done! Your payment is confirmed.", "xb": "5 more withdrawals · 0.5 TON", "lvt": "Upgrade level", "lvi": "Pay in TON at the live token price. Each level adds +1.5 TONNEL per day.", "pays": "Payments", "pay": "Pay", "lv": "Level", "lrw": "Level reward", "vrw": "Verified account reward", "cld": "Claimed", "lck": "Locked", "fr": "Friends", "fl": "Your invite link", "cp": "Copy", "sh": "Share", "fac": "Active friends", "fe": "Referral earnings", "fn": "Invite friends: you get 0.2 TONNEL per active friend plus 5% of their mining and task rewards. A friend becomes active after joining the channel, claiming once and finishing the channel task.", "bt": "Quick bet", "bb": "BUY ↑", "bs": "SELL ↓", "bmx": "Stake 5–20% of balance · pays 1.8x · 30s", "bday": "Bets today", "bw": "You won", "bl": "You lost", "bd": "Price unchanged: stake returned", "bo": "Bet placed. Wait for the result.", "e_taken": "You already claimed this reward", "e_nv": "Verify your account first", "e_cd": "Wait 10 seconds between bets", "e_day": "Daily limit reached (15 bets)", "e_open": "You already have an active bet", "e_pr": "Price unavailable, try again", "e_tc": "Wallet connection is unavailable"});Object.assign(L.fa,{"vb": "وریفای · ۰.۳ TON", "vt": "وریفای حساب", "vp1": "این مبلغ (۰.۳ TON) به‌عنوان کارمزد برداشت‌های داخل برنامه از شما کم می‌شود و برای ۵ برداشت کافی است.", "vp2": "با این پرداخت می‌توانید ۵ برداشت ثبت کنید.", "vp3": "این کار جلوی سوءاستفاده و افراد سودجو را می‌گیرد.", "cf": "تأیید", "connw": "اتصال کیف پول", "wcon": "کیف پول", "pyw": "در حال بررسی… ۲ تا ۵ دقیقه طول می‌کشد.", "pyd": "انجام شد! پرداخت شما تأیید شد.", "xb": "۵ برداشت دیگر · ۰.۵ TON", "lvt": "ارتقای لول", "lvi": "با TON و به قیمت لحظه‌ای توکن پرداخت کنید. هر لول ۱.۵ توکن در روز به ماین شما اضافه می‌کند.", "pays": "پرداخت‌ها", "pay": "پرداخت", "lv": "لول", "lrw": "پاداش لول", "vrw": "پاداش حساب وریفای‌شده", "cld": "دریافت شد", "lck": "قفل", "fr": "دوستان", "fl": "لینک دعوت شما", "cp": "کپی", "sh": "اشتراک", "fac": "دوستان فعال", "fe": "درآمد رفرال", "fn": "دوستان را دعوت کنید: برای هر دوست فعال ۰.۲ توکن به‌علاوه ۵٪ از ماین و مأموریت‌های او می‌گیرید. دوست پس از عضویت در کانال، یک بار جمع‌آوری ماین و گرفتن مأموریت کانال فعال می‌شود.", "bt": "شرط سریع", "bb": "خرید ↑", "bs": "فروش ↓", "bmx": "۵ تا ۲۰٪ موجودی · پرداخت ۱.۸ برابر · ۳۰ ثانیه", "bday": "شرط‌های امروز", "bw": "بردید", "bl": "باختید", "bd": "قیمت تغییر نکرد: مبلغ برگشت", "bo": "شرط ثبت شد. منتظر نتیجه بمانید.", "e_taken": "قبلاً پاداش خود را دریافت کرده‌اید", "e_nv": "ابتدا حساب خود را وریفای کنید", "e_cd": "بین شرط‌ها ۱۰ ثانیه صبر کنید", "e_day": "سقف روزانه (۱۵ شرط) تمام شد", "e_open": "یک شرط فعال دارید", "e_pr": "قیمت در دسترس نیست، دوباره امتحان کنید", "e_tc": "اتصال کیف پول در دسترس نیست"});Object.assign(L.ru,{"vb": "Верификация · 0,3 TON", "vt": "Верификация аккаунта", "vp1": "Эта сумма (0,3 TON) списывается как комиссия за выводы в приложении и покрывает 5 выводов.", "vp2": "После оплаты вы сможете оформить 5 выводов.", "vp3": "Это также защищает приложение от злоупотреблений и охотников за прибылью.", "cf": "Подтвердить", "connw": "Подключить кошелёк", "wcon": "Кошелёк", "pyw": "Обработка… это займёт 2–5 минут.", "pyd": "Готово! Платёж подтверждён.", "xb": "Ещё 5 выводов · 0,5 TON", "lvt": "Повышение уровня", "lvi": "Оплата в TON по текущей цене токена. Каждый уровень добавляет +1,5 TONNEL в день.", "pays": "Платежи", "pay": "Оплатить", "lv": "Уровень", "lrw": "Награда за уровень", "vrw": "Награда за верификацию", "cld": "Получено", "lck": "Закрыто", "fr": "Друзья", "fl": "Ваша ссылка", "cp": "Копировать", "sh": "Поделиться", "fac": "Активные друзья", "fe": "Доход от рефералов", "fn": "Приглашайте друзей: 0,2 TONNEL за активного друга плюс 5% от его майнинга и заданий. Друг становится активным после подписки на канал, одного сбора и задания канала.", "bt": "Быстрая ставка", "bb": "ПОКУПКА ↑", "bs": "ПРОДАЖА ↓", "bmx": "5–20% баланса · выплата 1,8x · 30 с", "bday": "Ставок сегодня", "bw": "Вы выиграли", "bl": "Вы проиграли", "bd": "Цена не изменилась: ставка возвращена", "bo": "Ставка принята. Ждите результат.", "e_taken": "Вы уже получили эту награду", "e_nv": "Сначала пройдите верификацию", "e_cd": "Подождите 10 секунд между ставками", "e_day": "Дневной лимит (15 ставок)", "e_open": "У вас уже есть активная ставка", "e_pr": "Цена недоступна, попробуйте снова", "e_tc": "Подключение кошелька недоступно"});Object.assign(L.ar,{"vb": "توثيق · 0.3 TON", "vt": "توثيق الحساب", "vp1": "يُخصم منك هذا المبلغ (0.3 TON) كرسوم لعمليات السحب داخل التطبيق ويكفي لـ 5 عمليات سحب.", "vp2": "بهذا الدفع يمكنك طلب 5 عمليات سحب.", "vp3": "كما يمنع ذلك إساءة الاستخدام ويُبعد الباحثين عن الربح السريع.", "cf": "تأكيد", "connw": "ربط المحفظة", "wcon": "المحفظة", "pyw": "جارٍ المعالجة… يستغرق 2 إلى 5 دقائق.", "pyd": "تم! تم تأكيد الدفع.", "xb": "5 عمليات سحب أخرى · 0.5 TON", "lvt": "ترقية المستوى", "lvi": "ادفع بـ TON بسعر الرمز الحالي. كل مستوى يضيف 1.5 TONNEL يوميًا.", "pays": "المدفوعات", "pay": "ادفع", "lv": "المستوى", "lrw": "مكافأة المستوى", "vrw": "مكافأة الحساب الموثق", "cld": "تم الاستلام", "lck": "مقفل", "fr": "الأصدقاء", "fl": "رابط الدعوة", "cp": "نسخ", "sh": "مشاركة", "fac": "الأصدقاء النشطون", "fe": "أرباح الإحالة", "fn": "ادعُ أصدقاءك: تحصل على 0.2 TONNEL لكل صديق نشط بالإضافة إلى 5% من تعدينه ومهامه. يصبح الصديق نشطًا بعد الانضمام للقناة وتجميع مرة واحدة وإتمام مهمة القناة.", "bt": "رهان سريع", "bb": "شراء ↑", "bs": "بيع ↓", "bmx": "5–20% من الرصيد · دفع 1.8x · 30 ث", "bday": "رهانات اليوم", "bw": "لقد ربحت", "bl": "لقد خسرت", "bd": "لم يتغير السعر: أُعيد المبلغ", "bo": "تم الرهان. انتظر النتيجة.", "e_taken": "لقد استلمت هذه المكافأة بالفعل", "e_nv": "وثّق حسابك أولاً", "e_cd": "انتظر 10 ثوانٍ بين الرهانات", "e_day": "تم بلوغ الحد اليومي (15 رهانًا)", "e_open": "لديك رهان نشط بالفعل", "e_pr": "السعر غير متاح، حاول مجددًا", "e_tc": "ربط المحفظة غير متاح"});
+Object.assign(L.en,{nop:"No payments yet",stk:"Stake"});Object.assign(L.fa,{nop:"هنوز پرداختی ثبت نشده",stk:"مبلغ شرط"});Object.assign(L.ru,{nop:"Платежей пока нет",stk:"Ставка"});Object.assign(L.ar,{nop:"لا توجد مدفوعات بعد",stk:"الرهان"});
+Object.assign(EM,{taken:"e_taken",notverified:"e_nv",cd:"e_cd",day:"e_day",open:"e_open",price:"e_pr"});
+const BOT="tonnelcrypt0bot",APPU="https://mehditera385-tech.github.io/tonnel-app/";
+let TC=null,WA="",Q=null,lastBet=-1,SET=0,ft="t",pct=10,said=0;
+const U=()=>(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)||{};
+const nano=n=>(n/1e9).toFixed(2);
+document.body.insertAdjacentHTML("beforeend",'<div id="ts" style="position:fixed;left:16px;right:16px;bottom:84px;z-index:12;display:none;background:#0a1a1f;border:1px solid #2fb5ad;border-radius:14px;padding:12px;font-size:13px;text-align:center"></div><div class="md" id="mv"><div class="box"><b data-i="vt"></b><div class="m" style="margin:10px 0" data-i="vp1"></div><div class="m" style="margin:10px 0" data-i="vp2"></div><div class="m" style="margin:10px 0" data-i="vp3"></div><button class="btn" id="vcf" data-i="cf"></button></div></div>');
+let tt=0;function tst(x,ok){const e=$("ts");e.style.display="block";e.style.color=ok?"#35e0a1":"#ff6b7a";e.textContent=x;clearTimeout(tt);tt=setTimeout(()=>e.style.display="none",4000)}
+document.querySelectorAll(".md").forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove("on")});
+/* wallet connect */
+function getTC(){if(TC)return TC;if(!window.TON_CONNECT_UI)return null;
+ TC=new TON_CONNECT_UI.TonConnectUI({manifestUrl:APPU+"tonconnect-manifest.json",actionsConfiguration:{twaReturnUrl:"https://t.me/"+BOT}});
+ fetch(APPU+"tonconnect-manifest.json").then(r=>{if(!r.ok)tst("manifest "+r.status)}).catch(()=>{});TC.onStatusChange(w=>{let a="";if(w&&w.account){a=w.account.address;try{a=TON_CONNECT_UI.toUserFriendlyAddress(a)}catch(e){}}if(a!==WA){WA=a;if(a)call("/api/wallet",{address:a})}showW()});return TC}
+$("ma").querySelector(".box").insertAdjacentHTML("beforeend",'<div class="row"><span data-i="wcon"></span><b class="ltr" id="aw" style="font-size:11px"></b></div><button class="btn" id="cw" style="margin-top:10px"></button>');
+function showW(){const a=WA||(S&&S.wallet)||"",sh=a?a.slice(0,5)+"…"+a.slice(-4):"—",lb=a?"✓ "+t("wcon"):t("connw");$("aw").textContent=sh;$("cw").textContent=lb;if($("cw2")){$("aw2").textContent=sh;$("cw2").textContent=lb}}
+async function openWallet(){let c=null;try{c=getTC()}catch(e){tst("TON: "+((e&&e.message)||e));return}if(!c){tst(t("e_tc"));return}
+ ["ma","mv"].forEach(i=>$(i).classList.remove("on"));
+ try{if(c.connected){await c.disconnect();return}}catch(e){}
+ let opened=false,un=null;try{un=c.onModalStateChange(x=>{if(x&&x.status==="opened")opened=true})}catch(e){}
+ tst("…",1);
+ try{c.openModal()}catch(e){}
+ setTimeout(async()=>{try{un&&un()}catch(e){}if(opened||c.connected){$("ts").style.display="none";return}
+  try{const ws=await c.getWallets(),w=ws.find(x=>/tonkeeper/i.test(x.name)&&x.universalLink)||ws.find(x=>x.universalLink),l=c.connector.connect({universalLink:w.universalLink,bridgeUrl:w.bridgeUrl});tg?tg.openLink(l):window.open(l)}catch(e){tst("TON: "+((e&&e.message)||e))}},1800)}
+$("cw").onclick=openWallet;
+$("v-wallet").querySelector("h1").insertAdjacentHTML("afterend",'<div class="card" style="text-align:center"><div class="m" style="font-size:12px" data-i="wcon"></div><b class="ltr" id="aw2" style="display:block;margin:6px 0;font-size:12px"></b><button class="btn" id="cw2"></button></div>');
+$("cw2").onclick=openWallet;
+setTimeout(getTC,600);
+/* payments */
+function cbody(x){const e=new TextEncoder().encode(x),n=4+e.length,c=[0,2*n,0,0,0,0,...e],b=[0xb5,0xee,0x9c,0x72,1,1,1,1,0,c.length,0,...c];return btoa(String.fromCharCode(...b))}
+async function payFlow(kind,lv){
+ const c=getTC();if(!c){tst(t("e_tc"));return}if(!c.connected){openWallet();return}
+ const d=await call("/api/pay_init",{kind,lv});if(d.error){tst(t(EM[d.error]||"gerr")+(d.dbg?" ["+d.dbg+"]":""));return}
+ try{await c.sendTransaction({validUntil:Math.floor(Date.now()/1000)+600,messages:[{address:d.to,amount:String(d.nano),payload:cbody(d.code)}]})}catch(e){return}
+ tst(t("pyw"),1);poll(d.code,0)}
+async function poll(code,k){const d=await call("/api/pay_check",{code});if(d.status==="done"){apply(d);tst(t("pyd"),1);return}if(k<120)setTimeout(()=>poll(code,k+1),5000)}
+let QT=0;async function quote(){const d=await call("/api/quote");if(!d.error){Q=d;QT=Date.now();renderW()}}
+/* withdraw */
+$("wls").insertAdjacentHTML("afterend",'<button class="btn" id="vbtn" style="margin-top:10px" data-i="vb"></button><button class="btn ghost" id="xbtn" style="margin-top:10px;display:none" data-i="xb"></button>');
+$("vbtn").onclick=()=>$("mv").classList.add("on");$("vcf").onclick=()=>{$("mv").classList.remove("on");payFlow("verify",0)};$("xbtn").onclick=()=>payFlow("extra",0);
+/* wallet view */
+$("v-wallet").insertAdjacentHTML("beforeend",'<div class="card"><b data-i="lvt"></b><div class="m" style="font-size:12px;margin:6px 0" data-i="lvi"></div><div id="lvr"></div></div><div class="card"><b data-i="pays"></b><div id="pyl"></div></div>');
+$("lvr").onclick=e=>{const b=e.target.closest("[data-pl]");if(b&&!b.disabled)payFlow("level",+b.dataset.pl)};
+function renderW(){if(!S)return;
+ $("lvr").innerHTML=[2,3,4,5].map(l=>{const q=Q&&Q.levels.find(x=>x.lv===l),paid=S.paid_mask&(1<<l);return '<div class="row"><span>'+t("lv")+" "+l+" · "+S.lv_cost[l]+' TONNEL<div class="m" style="font-size:11px">+'+(1.5*l)+' / 24h</div></span><button class="tb" data-pl="'+l+'"'+(paid?" disabled":"")+'>'+(paid?"✓":t("pay")+(q&&q.nano?" ≈ "+nano(q.nano)+" TON":""))+'</button></div>'}).join("");
+ const loc=lang==="fa"?"fa-IR":lang==="ar"?"ar":lang==="ru"?"ru":"en-US";
+ $("pyl").innerHTML=(S.pays||[]).length?S.pays.map(p=>'<div class="row"><span>'+(p.kind==="level"?t("lv")+" "+p.lv:p.kind==="verify"?t("vt"):"+5 "+t("wd"))+'<div class="m" style="font-size:11px">'+new Date(p.created_at*1000).toLocaleString(loc)+'</div></span><b class="ltr">−'+nano(p.nano)+' TON</b></div>').join(""):'<div class="m" style="text-align:center;margin-top:8px">'+t("nop")+'</div>'}
+/* tasks + friends */
+$("v-tasks").insertAdjacentHTML("beforeend",'<div style="margin-top:14px"><button class="tb" data-ft="t"></button> <button class="tb" data-ft="f" data-i="fr"></button></div><div id="xt"></div><div id="fp" style="display:none"><div class="card"><div class="m" style="font-size:12px" data-i="fl"></div><div class="ltr" id="flk" style="font-size:12px;word-break:break-all;margin:6px 0"></div><div style="display:flex;gap:8px"><button class="btn ghost" id="fcp" data-i="cp"></button><button class="btn" id="fsh" data-i="sh"></button></div></div><div class="card"><div class="row"><span data-i="fac"></span><b id="fa1">0</b></div><div class="row"><span data-i="fe"></span><b id="fe1">0</b></div><div class="m" style="font-size:12px;margin-top:8px" data-i="fn"></div></div><div class="card" id="fl2"></div></div>');
+const mainCard=$("v-tasks").querySelector(".card"),hd=$("v-tasks").querySelectorAll("h1,p.s");
+function showFT(x){ft=x;mainCard.style.display=x==="t"?"":"none";hd.forEach(e=>e.style.display=x==="t"?"":"none");$("xt").style.display=x==="t"?"":"none";$("fp").style.display=x==="f"?"block":"none";
+ document.querySelectorAll("[data-ft]").forEach(b=>{const on=b.dataset.ft===x;b.style.color=on?"#7ff0e0":"#7f9fa6";b.style.borderColor=on?"#2fb5ad":"#163840"});if(x==="f")loadF()}
+document.querySelector('[data-ft="t"]').textContent="";document.querySelector('[data-ft="t"]').dataset.i="tasks";
+document.querySelectorAll("[data-ft]").forEach(b=>b.onclick=()=>showFT(b.dataset.ft));
+async function loadF(){const link="https://t.me/"+BOT+"?start=ref_"+U().id;$("flk").textContent=link;const d=await call("/api/friends");if(d.error)return;$("fa1").textContent=d.a;$("fe1").textContent=(d.e/1e6).toFixed(2);
+ $("fl2").innerHTML=d.list.length?d.list.map(x=>'<div class="row"><span>'+(x.username?"@"+x.username:"—")+'</span><b style="color:'+(x.active?"#35e0a1":"#7f9fa6")+'">'+(x.active?"✓ ":"")+(x.earn/1e6).toFixed(2)+'</b></div>').join(""):'<div class="m" style="text-align:center">'+t("none")+'</div>'}
+$("fcp").onclick=()=>{try{navigator.clipboard.writeText($("flk").textContent);tst("✓",1)}catch(e){}};
+$("fsh").onclick=()=>{const u="https://t.me/share/url?url="+encodeURIComponent($("flk").textContent)+"&text="+encodeURIComponent("TONNEL");tg?tg.openTelegramLink(u):window.open(u)};
+function trow(ti,sub,k,lab,dis){return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div style="font-weight:700;font-size:14px">'+ti+'</div><div class="m" style="font-size:11px">'+sub+'</div></div><button class="btn" style="width:auto;padding:9px 16px;font-size:13px" data-tk="'+k+'"'+(dis?" disabled":"")+'>'+lab+'</button></div>'}
+function renderT(){if(!S)return;let h=trow(t("vrw"),"+3 TONNEL","v",S.vtask?t("cld"):S.verified?t("claim"):t("lck"),S.vtask||!S.verified);
+ for(let l=2;l<=5;l++){const paid=S.paid_mask&(1<<l),tk=S.taken_mask&(1<<l);h+=trow(t("lrw")+" "+l,"+"+S.lv_reward[l]+" TONNEL","l"+l,tk?t("cld"):paid?t("claim"):t("lck"),tk||!paid)}$("xt").innerHTML=h}
+$("xt").onclick=async e=>{const b=e.target.closest("[data-tk]");if(!b||b.disabled)return;const k=b.dataset.tk;const d=await call(k==="v"?"/api/vtask":"/api/ltask",k==="v"?{}:{lv:+k.slice(1)});if(d.error){tst(t(EM[d.error]||"gerr")+(d.dbg?" ["+d.dbg+"]":""));return}apply(d);tst(t("tok"),1)};
+/* betting */
+$("v-chart").insertAdjacentHTML("beforeend",'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b data-i="bt"></b><div id="btm" class="t ltr" style="width:38px;height:38px;border-radius:50%;border:3px solid #163840;display:grid;place-items:center;font-size:11px">30</div></div><div class="m" style="font-size:11px;margin:6px 0" data-i="bmx"></div><div id="bch"></div><div class="m" id="bbal" style="font-size:13px;margin-top:10px"></div><div style="display:flex;gap:10px;margin-top:10px"><button class="btn" id="bbuy" style="background:#35e0a1;box-shadow:none" data-i="bb"></button><button class="btn" id="bsell" style="background:#ff6b7a;box-shadow:none;color:#2a0509" data-i="bs"></button></div><div class="m" id="bst" style="font-size:12px;margin-top:8px"></div><div id="bhs"></div></div>');
+$("bch").innerHTML=[5,10,20].map(p=>'<button class="tb" data-bp="'+p+'" style="padding:5px 12px;margin-right:6px;font-size:12px">'+p+'%</button>').join("");
+function marksB(){document.querySelectorAll("[data-bp]").forEach(b=>{const on=+b.dataset.bp===pct;b.style.color=on?"#7ff0e0":"#7f9fa6";b.style.borderColor=on?"#2fb5ad":"#163840"});updB()}
+function updB(){if(!S)return;$("bbal").textContent=t("bal")+": "+(S.balance/1e6).toFixed(4)+" TONNEL · "+t("stk")+" "+pct+"%: "+(S.balance*pct/100/1e6).toFixed(4)}
+document.querySelectorAll("[data-bp]").forEach(b=>b.onclick=()=>{pct=+b.dataset.bp;marksB()});marksB();
+async function bet(side){const d=await call("/api/bet",{side,pct});if(d.error){tst(t(EM[d.error]||"gerr")+(d.dbg?" ["+d.dbg+"]":""));return}apply(d);tst(t("bo"),1)}
+$("bbuy").onclick=()=>bet("buy");$("bsell").onclick=()=>bet("sell");
+function renderB(){if(!S)return;const L2=S.bets||[];
+ if(lastBet===-1)lastBet=L2.length?L2[0].id:0;
+ else if(L2.length&&L2[0].id>lastBet){lastBet=L2[0].id;const x=L2[0];tst(x.status==="win"?t("bw")+" +"+((x.payout-x.stake)/1e6).toFixed(2):x.status==="lose"?t("bl")+" −"+(x.stake/1e6).toFixed(2):t("bd"),x.status==="win")}
+ $("bhs").innerHTML=L2.map(x=>'<div class="row"><span>'+(x.side==="buy"?"↑":"↓")+" "+(x.stake/1e6).toFixed(2)+'<div class="m" style="font-size:11px">'+Number(x.p0).toFixed(4)+" → "+Number(x.p1).toFixed(4)+'</div></span><b style="color:'+(x.status==="win"?"#35e0a1":x.status==="lose"?"#ff6b7a":"#7f9fa6")+'">'+(x.status==="win"?"+"+((x.payout-x.stake)/1e6).toFixed(2):x.status==="lose"?"−"+(x.stake/1e6).toFixed(2):"=")+'</b></div>').join("")}
+setInterval(()=>{if(!S)return;const now=Date.now()/1000+off,o=S.bet;
+ $("bbuy").disabled=$("bsell").disabled=!!o;
+ if(o){const left=Math.ceil(o.t0+30-now);$("btm").textContent=Math.max(0,left);$("btm").style.borderTopColor="#2fb5ad";$("bst").textContent=(o.side==="buy"?"↑ ":"↓ ")+(o.stake/1e6).toFixed(2)+" @ $"+o.p0;
+  if(left<=0&&!SET){SET=1;call("/api/state").then(d=>{if(!d.error)apply(d);SET=0})}}
+ else{$("btm").textContent="30";$("btm").style.borderTopColor="#163840";$("bst").textContent=t("bday")+": "+S.bets_today+"/15"}},1000);
+/* hooks */
+const s1=stat;stat=function(){s1();renderT();renderW();renderB();updB();showW();$("vbtn").style.display=S.verified?"none":"block";$("xbtn").style.display=(S.verified&&S.wleft<1)?"block":"none"};
+const sl1=setLang;setLang=function(l){sl1(l);if(S){renderT();renderW()}showW();marksB()};
+const tb1=tab;tab=function(x){tb1(x);if(x==="wallet"&&(!Q||Date.now()-QT>28800000))quote();if(x==="tasks")showFT(ft)};
+/* welcome voice */
+function say(){if(said>1||!window.speechSynthesis)return;said++;try{const u=new SpeechSynthesisUtterance("Welcome to Crypto Tonnel");u.lang="en-US";speechSynthesis.speak(u)}catch(e){}}
+setTimeout(say,900);document.addEventListener("pointerdown",say,{once:true});
+showFT("t");setLang(lang);quote();setInterval(quote,28800000);
+})();
+</script>
+</body>
+</html>
