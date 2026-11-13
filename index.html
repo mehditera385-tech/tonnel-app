@@ -358,7 +358,29 @@ document.querySelectorAll(".md").forEach(m=>m.onclick=e=>{if(e.target===m)m.clas
 /* wallet connect */
 function getTC(){if(TC)return TC;if(!window.TON_CONNECT_UI)return null;
  TC=new TON_CONNECT_UI.TonConnectUI({manifestUrl:APPU+"tonconnect-manifest.json",actionsConfiguration:{twaReturnUrl:"https://t.me/"+BOT}});
- fetch(APPU+"tonconnect-manifest.json").then(r=>{if(!r.ok)tst("manifest "+r.status)}).catch(()=>{});TC.onStatusChange(w=>{let a="";if(w&&w.account){a=w.account.address;try{a=TON_CONNECT_UI.toUserFriendlyAddress(a)}catch(e){}}if(a!==WA){WA=a;if(a)call("/api/wallet",{address:a})}showW()});return TC}
+ fetch(APPU+"tonconnect-manifest.json").then(r=>{if(!r.ok)tst("manifest "+r.status)}).catch(()=>{});
+ TC.onStatusChange(async w=>{
+  let a="";
+  if(w&&w.account){
+   a=w.account.address;
+   try{a=TON_CONNECT_UI.toUserFriendlyAddress(a)}catch(e){}
+  }
+  if(a!==WA){
+   WA=a;
+   if(a){
+    const res=await call("/api/wallet",{address:a});
+    if(res.error){
+     if(res.error==="wallet_in_use")tst("این کیف پول قبلاً به حساب دیگری متصل شده است!",false);
+     else if(res.error==="wallet_too_young")tst("کیف پول شما باید حداقل ۱۰ روز از ساختش گذشته باشد!",false);
+     else tst("خطا در اتصال کیف پول",false);
+     try{await TC.disconnect();}catch(e){}
+     WA="";
+    }
+   }
+  }
+  showW();
+ });
+ return TC}
 $("ma").querySelector(".box").insertAdjacentHTML("beforeend",'<div class="row"><span data-i="wcon"></span><b class="ltr" id="aw" style="font-size:11px"></b></div><button class="btn" id="cw" style="margin-top:10px"></button>');
 function showW(){const a=WA||(S&&S.wallet)||"",sh=a?a.slice(0,5)+"…"+a.slice(-4):"—",lb=a?"✓ "+t("wcon"):t("connw");$("aw").textContent=sh;$("cw").textContent=lb;if($("cw2")){$("aw2").textContent=sh;$("cw2").textContent=lb}}
 async function diagW(){const U=["https://config.ton.org/wallets-v2.json","https://raw.githubusercontent.com/ton-blockchain/wallets-list/main/wallets-v2.json",APPU+"tonconnect-manifest.json"],bad=[];
